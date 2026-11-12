@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Компас — робота в Чехії з перевіркою</title>
+<style>
+  :root { --bg:#f4f6fb; --card:#fff; --ink:#152033; --mute:#5b6678; --line:#e3e7ef; --blue:#1d4ed8; --blue2:#1e40af;
+          --ok:#15803d; --okbg:#e8f6ee; --warn:#b45309; --warnbg:#fff4e0; --bad:#b91c1c; --badbg:#fde8e8; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  .wrap { max-width:720px; margin:0 auto; padding:16px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0 16px; }
+  .logo { font-weight:800; font-size:20px; letter-spacing:-.2px; text-decoration:none; color:var(--ink); }
+  .logo small { display:block; font-size:13px; font-weight:500; color:var(--mute); letter-spacing:0; }
+  .lang { display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
+  .lang button { border:0; background:none; padding:7px 12px; font:inherit; font-size:14px; cursor:pointer; color:var(--mute); }
+  .lang button.on { background:var(--blue); color:#fff; }
+  h1 { font-size:28px; line-height:1.2; margin:8px 0 8px; }
+  .lead { color:var(--mute); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:16px; }
+  .feats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+  .feat { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; font-size:14px; }
+  .feat b { display:block; font-size:15px; margin-bottom:2px; }
+  label { display:block; font-weight:600; margin:14px 0 6px; }
+  label:first-child { margin-top:0; }
+  input, textarea, select { width:100%; font:inherit; padding:11px 12px; border:1px solid #cdd3de; border-radius:10px; background:#fff; color:var(--ink); }
+  textarea { min-height:84px; resize:vertical; }
+  input:focus, textarea:focus, select:focus { outline:2px solid #93b4ff; border-color:var(--blue); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .seg { display:flex; flex-wrap:wrap; gap:8px; }
+  .seg input { display:none; }
+  .seg label { margin:0; font-weight:500; border:1px solid #cdd3de; border-radius:999px; padding:8px 14px; cursor:pointer; background:#fff; }
+  .seg input:checked + label { background:var(--blue); border-color:var(--blue); color:#fff; }
+  .btn { display:block; width:100%; border:0; border-radius:12px; padding:15px; font:inherit; font-weight:700; font-size:17px; background:var(--blue); color:#fff; cursor:pointer; margin-top:20px; }
+  .btn:hover { background:var(--blue2); }
+  .btn:disabled { opacity:.6; cursor:wait; }
+  .btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--blue); font-size:15px; padding:11px; margin-top:10px; }
+  .err { color:var(--bad); margin-top:10px; min-height:1em; }
+  .small { font-size:13px; color:var(--mute); }
+  footer { text-align:center; padding:20px 8px 40px; }
+  .hidden { display:none !important; }
+  /* результат */
+  .wait { text-align:center; padding:36px 20px; }
+  .spin { width:44px; height:44px; border:4px solid #dbe4ff; border-top-color:var(--blue); border-radius:50%; margin:0 auto 16px; animation:s 1s linear infinite; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .req { font-size:14px; color:var(--mute); }
+  .req b { color:var(--ink); font-weight:600; }
+  .vac { border-left:5px solid var(--line); }
+  .vac.ok { border-left-color:var(--ok); } .vac.caution { border-left-color:var(--warn); } .vac.bad { border-left-color:var(--bad); }
+  .vac h3 { margin:0 0 2px; font-size:19px; }
+  .co { color:var(--mute); margin-bottom:10px; }
+  .badge { display:inline-block; font-size:13px; font-weight:700; padding:3px 10px; border-radius:999px; margin:0 6px 6px 0; }
+  .b-ok { background:var(--okbg); color:var(--ok); } .b-caution { background:var(--warnbg); color:var(--warn); } .b-bad { background:var(--badbg); color:var(--bad); } .b-gray { background:#eef1f6; color:var(--mute); }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:10px 0; font-size:15px; }
+  dt { color:var(--mute); } dd { margin:0; word-break:break-word; }
+  .note { font-size:14px; background:#f7f8fb; border-radius:10px; padding:10px 12px; margin-top:8px; }
+  .rev { font-size:14px; margin:6px 0 0; padding-left:18px; }
+  .links { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .links a { text-decoration:none; font-weight:600; color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:8px 14px; font-size:15px; }
+  .share { display:flex; gap:8px; } .share input { font-size:13px; }
+  .share button { white-space:nowrap; border:1px solid var(--line); background:#fff; border-radius:10px; padding:0 14px; font:inherit; font-size:14px; cursor:pointer; }
+  @media (max-width:560px) { .feats { grid-template-columns:1fr; } .row { grid-template-columns:1fr; } h1 { font-size:24px; } .card { padding:16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="/" data-t="brand"></a>
+    <div class="lang"><button data-l="uk">UA</button><button data-l="ru">RU</button></div>
+  </header>
+
+  <!-- ФОРМА -->
+  <main id="formView" class="hidden">
+    <h1 data-t="title"></h1>
+    <p class="lead" data-t="lead"></p>
+    <div class="feats">
+      <div class="feat"><b data-t="f1"></b><span data-t="f1d"></span></div>
+      <div class="feat"><b data-t="f2"></b><span data-t="f2d"></span></div>
+      <div class="feat"><b data-t="f3"></b><span data-t="f3d"></span></div>
+    </div>
+    <form id="form" class="card" novalidate>
+      <label for="place" data-t="place"></label>
+      <input id="place" name="place" maxlength="200" required data-ph="placePh">
+      <label for="job" data-t="job"></label>
+      <textarea id="job" name="job" maxlength="1000" required data-ph="jobPh"></textarea>
+      <div class="row">
+        <div><label for="docs" data-t="docs"></label>
+          <select id="docs" name="docs" required>
+            <option value="protection" data-t="d_protection"></option>
+            <option value="visa" data-t="d_visa"></option>
+            <option value="biometric" data-t="d_biometric"></option>
+            <option value="eu" data-t="d_eu"></option>
+            <option value="other" data-t="d_other"></option>
+          </select></div>
+        <div><label for="czech" data-t="czech"></label>
+          <select id="czech" name="czech">
+            <option value="none" data-t="c_none"></option>
+            <option value="basic" data-t="c_basic"></option>
+            <option value="good" data-t="c_good"></option>
+          </select></div>
+      </div>
+      <label data-t="who"></label>
+      <div class="seg">
+        <input type="radio" name="who" id="w1" value="man" checked><label for="w1" data-t="w_man"></label>
+        <input type="radio" name="who" id="w2" value="woman"><label for="w2" data-t="w_woman"></label>
+        <input type="radio" name="who" id="w3" value="couple"><label for="w3" data-t="w_couple"></label>
+      </div>
+      <label data-t="housing"></label>
+      <div class="seg">
+        <input type="radio" name="housing" id="h1" value="yes" checked><label for="h1" data-t="h_yes"></label>
+        <input type="radio" name="housing" id="h2" value="no"><label for="h2" data-t="h_no"></label>
+      </div>
+      <label for="notes" data-t="notes"></label>
+      <textarea id="notes" name="notes" maxlength="1000" data-ph="notesPh"></textarea>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" maxlength="200" required placeholder="name@gmail.com" autocomplete="email">
+      <button class="btn" id="payBtn" type="submit"></button>
+      <div class="err" id="formErr"></div>
+    </form>
+  </main>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <main id="resView" class="hidden">
+    <div id="resBody"></div>
+  </main>
+
+  <footer class="small" data-t="foot"></footer>
+</div>
+
+<script>
+const T = {
+  uk: {
+    brand: '🧭 Компас <small>робота в Чехії з перевіркою</small>',
+    title: 'Знайдемо роботу в Чехії і перевіримо агентуру',
+    lead: 'Опишіть, яку роботу шукаєте. Отримаєте свіжі вакансії з перевіркою ліцензії агентури та відгуками.',
+    f1: 'Свіжі вакансії', f1d: 'Не старші 2 тижнів',
+    f2: 'Ліцензія агентури', f2d: 'Перевірка в офіційному реєстрі',
+    f3: 'Відгуки', f3d: 'Що пишуть люди',
+    place: 'Місто або регіон', placePh: 'Прага і околиці',
+    job: 'Яка робота потрібна', jobPh: 'Склад, будова, прибирання…',
+    docs: 'Документи', d_protection: 'Тимчасовий захист', d_visa: 'Віза / ВНЖ', d_biometric: 'Біометричний паспорт', d_eu: 'Паспорт ЄС', d_other: 'Інше',
+    czech: 'Чеська мова', c_none: 'Не знаю', c_basic: 'Базова', c_good: 'Добра',
+    who: 'Хто шукає', w_man: 'Чоловік', w_woman: 'Жінка', w_couple: 'Пара',
+    housing: 'Житло', h_yes: 'Потрібне', h_no: 'Не потрібне',
+    notes: 'Побажання', notesPh: 'Зарплата, графік, досвід…',
+    pay: (p) => `Оплатити ${p}`, start: 'Почати пошук',
+    errFields: 'Заповніть місто, роботу та email.', errEmail: 'Перевірте email.', errMany: 'Забагато спроб. Спробуйте пізніше.', errPay: 'Не вдалося відкрити оплату. Спробуйте ще раз.', errNet: 'Немає зʼєднання. Спробуйте ще раз.',
+    foot: 'Сервіс лише шукає та перевіряє відкриту інформацію і не є агентурою. Ніколи не платіть агентурі за працевлаштування.',
+    yourReq: 'Ваш запит',
+    waitPay: 'Перевіряємо оплату…', waitPayD: 'Зазвичай кілька секунд.',
+    searching: 'Шукаємо вакансії і перевіряємо агентури', searchingD: '1–3 хвилини. Добірка також прийде на email.',
+    errTitle: 'Пошук не вдався', errD: 'Оплата збережена. Спробуйте ще раз.', retry: 'Спробувати ще раз', errFinal: 'Напишіть нам — ми допоможемо.',
+    notFound: 'Добірку не знайдено.', back: 'На головну',
+    found: (n) => `Знайдено вакансій: ${n}`, none: 'На жаль, свіжих перевірених вакансій під цей запит не знайшлося.',
+    v_ok: 'Надійно', v_caution: 'Обережно', v_bad: 'Схоже на обман',
+    l_yes: 'Ліцензія є', l_no: 'Ліцензії немає', l_unknown: 'Ліцензія не знайдена', l_not_needed: 'Прямий роботодавець',
+    city: 'Місто', salary: 'Зарплата', housingL: 'Житло', docsL: 'Документи', posted: 'Опубліковано', contact: 'Контакт',
+    reviews: 'Відгуки', open: 'Відкрити вакансію',
+    copyAll: 'Скопіювати добірку', copied: 'Скопійовано ✓', copy: 'Копіювати',
+    yourLink: 'Ваше посилання на цю добірку',
+    newSearch: 'Новий пошук',
+  },
+  ru: {
+    brand: '🧭 Компас <small>работа в Чехии с проверкой</small>',
+    title: 'Найдём работу в Чехии и проверим агентуру',
+    lead: 'Опишите, какую работу ищете. Получите свежие вакансии с проверкой лицензии агентуры и отзывами.',
+    f1: 'Свежие вакансии', f1d: 'Не старше 2 недель',
+    f2: 'Лицензия агентуры', f2d: 'Проверка в официальном реестре',
+    f3: 'Отзывы', f3d: 'Что пишут люди',
+    place: 'Город или регион', placePh: 'Прага и окрестности',
+    job: 'Какая работа нужна', jobPh: 'Склад, стройка, уборка…',
+    docs: 'Документы', d_protection: 'Временная защита', d_visa: 'Виза / ВНЖ', d_biometric: 'Биометрический паспорт', d_eu: 'Паспорт ЕС', d_other: 'Другое',
+    czech: 'Чешский язык', c_none: 'Не знаю', c_basic: 'Базовый', c_good: 'Хороший',
+    who: 'Кто ищет', w_man: 'Мужчина', w_woman: 'Женщина', w_couple: 'Пара',
+    housing: 'Жильё', h_yes: 'Нужно', h_no: 'Не нужно',
+    notes: 'Пожелания', notesPh: 'Зарплата, график, опыт…',
+    pay: (p) => `Оплатить ${p}`, start: 'Начать поиск',
+    errFields: 'Заполните город, работу и email.', errEmail: 'Проверьте email.', errMany: 'Слишком много попыток. Попробуйте позже.', errPay: 'Не удалось открыть оплату. Попробуйте ещё раз.', errNet: 'Нет соединения. Попробуйте ещё раз.',
+    foot: 'Сервис только ищет и проверяет открытую информацию и не является агентурой. Никогда не платите агентуре за трудоустройство.',
+    yourReq: 'Ваш запрос',
+    waitPay: 'Проверяем оплату…', waitPayD: 'Обычно несколько секунд.',
+    searching: 'Ищем вакансии и проверяем агентуры', searchingD: '1–3 минуты. Подборка также придёт на email.',
+    errTitle: 'Поиск не удался', errD: 'Оплата сохранена. Попробуйте ещё раз.', retry: 'Попробовать ещё раз', errFinal: 'Напишите нам — мы поможем.',
+    notFound: 'Подборка не найдена.', back: 'На главную',
+    found: (n) => `Найдено вакансий: ${n}`, none: 'К сожалению, свежих проверенных вакансий под этот запрос не нашлось.',
+    v_ok: 'Надёжно', v_caution: 'Осторожно', v_bad: 'Похоже на обман',
+    l_yes: 'Лицензия есть', l_no: 'Лицензии нет', l_unknown: 'Лицензия не найдена', l_not_needed: 'Прямой работодатель',
+    city: 'Город', salary: 'Зарплата', housingL: 'Жильё', docsL: 'Документы', posted: 'Опубликовано', contact: 'Контакт',
+    reviews: 'Отзывы', open: 'Открыть вакансию',
+    copyAll: 'Скопировать подборку', copied: 'Скопировано ✓', copy: 'Копировать',
+    yourLink: 'Ваша ссылка на эту подборку',
+    newSearch: 'Новый поиск',
+  },
+};
+let lang = (() => { try { return localStorage.getItem('lang') || 'uk'; } catch { return 'uk'; } })();
+let cfg = { price: 149, currency: 'Kč', free: false };
+let order = null, pollTimer = null;
+const $ = (s) => document.querySelector(s);
+const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : (v ?? k); };
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const safeUrl = (u) => /^https?:\/\//i.test(u || '') ? u : '';
+
+function applyLang() {
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'uk';
+  document.querySelectorAll('[data-t]').forEach((el) => { el.innerHTML = t(el.dataset.t); });
+  document.querySelectorAll('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph); });
+  document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.l === lang));
+  $('#payBtn').textContent = cfg.free ? t('start') : t('pay', `${cfg.price} ${cfg.currency}`);
+  document.title = lang === 'ru' ? 'Компас — работа в Чехии с проверкой' : 'Компас — робота в Чехії з перевіркою';
+  if (order) renderOrder();
+}
+document.querySelectorAll('.lang button').forEach((b) => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem('lang', lang); } catch {} applyLang(); });
+
+// ---------- форма ----------
+$('#form').onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = Object.fromEntries(new FormData(e.target));
+  const err = $('#formErr'); err.textContent = '';
+  if (!fd.place.trim() || !fd.job.trim() || !fd.email.trim()) return err.textContent = t('errFields');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fd.email.trim())) return err.textContent = t('errEmail');
+  const btn = $('#payBtn'); btn.disabled = true;
+  try {
+    const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fd, lang }) });
+    const j = await r.json();
+    if (!r.ok) { err.textContent = j.error === 'email' ? t('errEmail') : j.error === 'fields' ? t('errFields') : j.error === 'too_many' ? t('errMany') : t('errPay'); btn.disabled = false; return; }
+    location.href = j.url;
+  } catch { err.textContent = t('errNet'); btn.disabled = false; }
+};
+
+// ---------- результат ----------
+async function loadOrder(id) {
+  try {
+    const r = await fetch('/api/order/' + encodeURIComponent(id));
+    if (r.status === 404) { order = { notFound: true }; renderOrder(); return; }
+    order = await r.json();
+    if (!localStorage.getItem('lang_set_' + id)) { lang = order.lang === 'ru' ? 'ru' : 'uk'; try { localStorage.setItem('lang_set_' + id, '1'); } catch {} applyLang(); }
+    else renderOrder();
+  } catch { /* сеть — попробуем снова */ }
+  clearTimeout(pollTimer);
+  if (!order || ['awaiting_payment', 'paid', 'searching'].includes(order.status)) pollTimer = setTimeout(() => loadOrder(id), 3000);
+}
+
+function reqSummary(f) {
+  return `<div class="card req"><div style="margin-bottom:4px"><b>${t('yourReq')}</b></div>
+    ${esc(f.job)} · ${esc(f.place)} · ${t('d_' + f.docs)} · ${t('w_' + f.who)} · ${t('housing')}: ${t('h_' + f.housing).toLowerCase()}${f.notes ? ' · ' + esc(f.notes) : ''}</div>`;
+}
+
+function renderOrder() {
+  const box = $('#resBody'); const o = order;
+  if (!o) return;
+  if (o.notFound) { box.innerHTML = `<div class="card wait"><h2>${t('notFound')}</h2><a class="btn" href="/">${t('back')}</a></div>`; return; }
+  const link = location.origin + '/r/' + o.id;
+  const shareBox = `<div class="card"><div class="small" style="margin-bottom:6px">${t('yourLink')}</div>
+    <div class="share"><input readonly value="${esc(link)}" onclick="this.select()"><button onclick="copyText('${esc(link)}', this)">${t('copy')}</button></div></div>`;
+  if (o.status === 'awaiting_payment') { box.innerHTML = `<div class="card wait"><div class="spin"></div><h2>${t('waitPay')}</h2><p class="small">${t('waitPayD')}</p></div>`; return; }
+  if (o.status === 'paid' || o.status === 'searching') { box.innerHTML = `<div class="card wait"><div class="spin"></div><h2>${t('searching')}</h2><p class="small">${t('searchingD')}</p></div>` + reqSummary(o.form) + shareBox; return; }
+  if (o.status === 'error') {
+    box.innerHTML = `<div class="card wait"><h2>${t('errTitle')}</h2><p class="small">${o.canRetry ? t('errD') : t('errFinal')}</p>
+      ${o.canRetry ? `<button class="btn" id="retryBtn">${t('retry')}</button>` : ''}</div>` + reqSummary(o.form) + shareBox;
+    const rb = $('#retryBtn'); if (rb) rb.onclick = async () => { rb.disabled = true; await fetch(`/api/order/${o.id}/retry`, { method: 'POST' }); loadOrder(o.id); };
+    return;
+  }
+  // done
+  const res = o.result || { vacancies: [] }; const vs = res.vacancies || [];
+  let h = `<h1>${vs.length ? t('found', vs.length) : t('none')}</h1>`;
+  if (res.summary) h += `<p class="lead">${esc(res.summary)}</p>`;
+  if (vs.length) h += `<button class="btn" id="copyAllBtn" style="margin:0 0 16px">${t('copyAll')}</button>`;
+  h += reqSummary(o.form);
+  for (const v of vs) {
+    const lic = { yes: 'b-ok', no: 'b-bad', unknown: 'b-caution', not_needed: 'b-gray' }[v.license] || 'b-gray';
+    const rows = [['city', v.city], ['salary', v.salary], ['housingL', v.housing], ['docsL', v.documents], ['posted', v.posted], ['contact', v.contact]]
+      .filter(([, x]) => x).map(([k, x]) => `<dt>${t(k)}</dt><dd>${esc(x)}</dd>`).join('');
+    const revs = (v.reviews || []).map((r) => `<li>${esc(r.text)} <span class="small">— ${safeUrl(r.link) ? `<a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.source || 'link')}</a>` : esc(r.source)}</span></li>`).join('');
+    h += `<div class="card vac ${esc(v.verdict)}">
+      <span class="badge b-${esc(v.verdict)}">${t('v_' + v.verdict)}</span><span class="badge ${lic}">${t('l_' + v.license)}</span>
+      <h3>${esc(v.title)}</h3><div class="co">${esc(v.company)}</div>
+      <dl>${rows}</dl>
+      ${v.verdict_note ? `<div class="note">${esc(v.verdict_note)}${v.license_note ? '<br><span class="small">' + esc(v.license_note) + '</span>' : ''}</div>` : ''}
+      ${revs ? `<div style="margin-top:10px"><b>${t('reviews')}</b><ul class="rev">${revs}</ul></div>` : ''}
+      ${safeUrl(v.link) ? `<div class="links"><a href="${esc(v.link)}" target="_blank" rel="noopener">${t('open')} ↗</a></div>` : ''}
+    </div>`;
+  }
+  h += shareBox + `<a class="btn ghost" href="/" style="text-align:center;text-decoration:none">${t('newSearch')}</a>`;
+  box.innerHTML = h;
+  const cb = $('#copyAllBtn'); if (cb) cb.onclick = () => copyText(plainText(o), cb);
+}
+
+function plainText(o) {
+  const res = o.result; const L = [];
+  if (res.summary) L.push(res.summary, '');
+  res.vacancies.forEach((v, i) => {
+    L.push(`${i + 1}. ${v.title} — ${v.company}`);
+    L.push(`   ${t('v_' + v.verdict)} · ${t('l_' + v.license)}`);
+    [['city', v.city], ['salary', v.salary], ['housingL', v.housing], ['docsL', v.documents], ['contact', v.contact]].forEach(([k, x]) => x && L.push(`   ${t(k)}: ${x}`));
+    if (v.verdict_note) L.push(`   ${v.verdict_note}`);
+    if (v.link) L.push(`   ${v.link}`);
+    L.push('');
+  });
+  L.push(location.origin + '/r/' + o.id);
+  return L.join('\n');
+}
+async function copyText(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  const old = btn.textContent; btn.textContent = t('copied'); setTimeout(() => btn.textContent = old, 1500);
+}
+
+// ---------- старт ----------
+(async () => {
+  try { cfg = await (await fetch('/api/config')).json(); } catch {}
+  const m = location.pathname.match(/^\/r\/([A-Za-z0-9_-]+)/);
+  if (m) { $('#resView').classList.remove('hidden'); applyLang(); loadOrder(m[1]); }
+  else { $('#formView').classList.remove('hidden'); applyLang(); }
+})();
+</script>
+</body>
+</html>
